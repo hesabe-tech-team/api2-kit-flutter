@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:example/result_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:hesabe/hesabe.dart';
@@ -20,6 +22,13 @@ class MyApp extends StatelessWidget {
   }
 }
 
+ class MyHttpOverrides extends HttpOverrides{
+  @override
+  HttpClient createHttpClient(SecurityContext? context){
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port)=> true;
+  }
+}
 enum PaymentType { DEFAULT, KNET, MPGS }
 
 class MyHomePage extends StatefulWidget {
@@ -43,6 +52,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+    HttpOverrides.global = MyHttpOverrides();
+
     super.initState();
     hesabe = Hesabe(
       baseUrl: 'https://sandbox.hesabe.com',
