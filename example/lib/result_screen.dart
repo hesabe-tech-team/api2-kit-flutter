@@ -29,22 +29,22 @@ class _ResultScreenState extends State<ResultScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  !isError
-                      ? 'Success! Transaction successful.'
-                      : ' Error! Transaction failed. ',
-                  style: Theme.of(context).textTheme.subtitle1?.copyWith(
-                        color: isError ? Colors.red : Colors.green,
-                      ),
-                ),
-                if (widget.response is Map &&
-                    widget.response.containsKey('resultCode')) ...{
-                  Column(
+padding: const EdgeInsets.all(16.0),
+child: SingleChildScrollView(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        !isError
+            ? 'Success! Transaction successful.'
+            : ' Error! Transaction failed. ',
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: isError ? Colors.red : Colors.green,
+            ),
+      ),
+      if (widget.response is Map &&
+          widget.response.containsKey('resultCode')) ...{
+        Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 8),
