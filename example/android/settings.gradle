@@ -1,4 +1,4 @@
-// ✅ 1. Ensure Gradle Plugin Management is Set Up
+
 pluginManagement {
     repositories {
         google()
@@ -7,7 +7,6 @@ pluginManagement {
     }
 }
 
-// ✅ 2. Ensure Dependency Resolution is Configured
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)  
 
@@ -18,8 +17,12 @@ dependencyResolutionManagement {
     }
 }
 
-// ✅ 3. Keep the Flutter SDK Configuration
+
 include ':app'
+
+if (file("../../android/settings.gradle").exists()) {
+    apply from: "../../android/settings.gradle"  // ✅ Links to the main SDK settings.gradle
+}
 
 def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
 def properties = new Properties()
