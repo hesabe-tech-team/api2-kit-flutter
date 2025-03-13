@@ -1,3 +1,4 @@
+// ✅ 1. buildscript {} must be at the top
 buildscript {
     ext.kotlin_version = '1.6.10' //
     repositories {
@@ -6,10 +7,21 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:4.1.0'
+        classpath 'com.android.tools.build:gradle:8.2.1'
+        // Ensure correct Gradle version
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.3.15'
     }
 }
+
+// ✅ 2. Add pluginManagement {} in settings.gradle (if needed)
+
+// ✅ 3. Move plugins {} block BELOW buildscript
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'com.google.gms.google-services' // If using Firebase
+apply plugin: 'org.jetbrains.kotlin.android'
 
 allprojects {
     repositories {
@@ -24,6 +36,6 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register("clean", Delete) {
+    delete rootProject.layout.buildDirectory
 }
