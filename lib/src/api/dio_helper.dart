@@ -7,9 +7,9 @@ class DioHelper {
   static Dio getDio(String? baseURL) {
     final Dio dio = Dio();
     dio.options.baseUrl = baseURL ?? base_url;
-    dio.options.connectTimeout = 30000;
-    dio.options.receiveTimeout = 60000;
-    dio.options.sendTimeout = 30000;
+    dio.options.connectTimeout = const Duration(milliseconds: 30000);
+    dio.options.receiveTimeout = const Duration(milliseconds: 60000);
+    dio.options.sendTimeout = const Duration(milliseconds: 30000);
     return dio;
   }
 
@@ -17,29 +17,29 @@ class DioHelper {
     dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
   }
 
-  static Exception? parseError(DioError error) {
+  static Exception? parseError(DioException error) {
     switch (error.type) {
-      case DioErrorType.connectTimeout:
-      case DioErrorType.sendTimeout:
-      case DioErrorType.receiveTimeout:
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
         return _getException(Errors.code_timeout, Errors.message_timeout);
 
-      case DioErrorType.response:
+      case DioExceptionType.badResponse:
         String message;
         try {
           message = error.response?.data['message'];
         } catch (e) {
-          message = error.message;
+          message = error.message ?? '';
         }
         if (message.isEmpty) {
-          message = error.message;
+          message = error.message ?? '';
         }
         return _getException(Errors.code_response, message);
-      case DioErrorType.cancel:
-        return _getException(error.type.toString(), error.message);
-      case DioErrorType.other:
+      case DioExceptionType.cancel:
+        return _getException(error.type.toString(), error.message ?? '');
+      case DioExceptionType.unknown:
       default:
-        return _getException(error.type.toString(), error.message);
+        return _getException(error.type.toString(), error.message ?? '');
     }
   }
 
