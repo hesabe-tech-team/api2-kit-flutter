@@ -45,10 +45,16 @@ class Hesabe {
     BuildContext context, {
     required Map<String, dynamic> paymentRequestObject,
   }) async {
+    print('=== HESABE CHECKOUT REQUEST ===');
+    print('Payment Request Object: ${json.encode(paymentRequestObject)}');
+    
     responseUrl = paymentRequestObject['responseUrl'];
     failureUrl = paymentRequestObject['failureUrl'];
     final request = json.encode(paymentRequestObject);
     final encryptedData = HesabeCrypt().encrypt(request, secretKey, ivKey);
+    print('Encrypted data length: ${encryptedData.length}');
+    print('Encrypted data: ${encryptedData.substring(0, 100)}...');
+    
     await checkOutRequest(encryptedData, context);
   }
 
@@ -70,46 +76,70 @@ class Hesabe {
   }
 
   Future<void> processResponse(String response, BuildContext context) async {
-    /* Decrypt Response */
-    final decryptedResponse = HesabeCrypt().decrypt(response, secretKey, ivKey);
-    final trimmedData =
-        decryptedResponse.replaceAll(_trimmingRegExp, '').trim();
-    /* Get token from decrypted response */
-    final responseToken = json.decode(trimmedData)['response']['data'];
-    /* Create payment URL with response token */
-    final paymentURL = '$baseUrl/payment?data=$responseToken';
+    try {
+      /* Decrypt Response */
+      final decryptedResponse = HesabeCrypt().decrypt(response, secretKey, ivKey);
+      print('Decrypted response: $decryptedResponse');
+      
+      final trimmedData =
+          decryptedResponse.replaceAll(_trimmingRegExp, '').trim();
+      print('Trimmed data: $trimmedData');
+      
+      /* Clean any remaining non-printable characters */
+      final cleanedData = trimmedData.replaceAll(RegExp(r'[\x00-\x1F\x7F]+'), '');
+      print('Cleaned data: $cleanedData');
+      
+      /* Get token from decrypted response */
+      final responseToken = json.decode(cleanedData)['response']['data'];
+      print('Response token extracted successfully: $responseToken');
+      
+      /* Create payment URL with response token */
+      final paymentURL = '$baseUrl/payment?data=$responseToken';
+      print('Payment URL created: $paymentURL');
 
-    /* Open WebView Activity to load the URL */
-    final data = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => WebviewScreen(
-          paymentURL: paymentURL,
-          responseUrl: responseUrl,
-          failureUrl: failureUrl,
+      /* Open WebView Activity to load the URL */
+      final data = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => WebviewScreen(
+            paymentURL: paymentURL,
+            responseUrl: responseUrl,
+            failureUrl: failureUrl,
+          ),
         ),
-      ),
-    );
+      );
 
-    String eventName;
+      String eventName;
 
-    if (data == EVENT_PAYMENT_CANCELLED_BY_USER) {
-      eventName = EVENT_PAYMENT_ERROR;
-      _eventEmitter.emit(eventName, null, 'Payment Cancelled by user.');
-    } else if (data != null) {
-      final decryptedData = HesabeCrypt()
-          .decrypt(data, secretKey, ivKey)
-          .replaceAll(_trimmingRegExp, '')
-          .trim();
-
-      final decodedResponse = json.decode(utf8.decode(decryptedData.codeUnits));
-
-      if (decodedResponse['status']) {
-        eventName = EVENT_PAYMENT_SUCCESS;
-        _eventEmitter.emit(eventName, null, decodedResponse['response']);
-      } else {
+      if (data == EVENT_PAYMENT_CANCELLED_BY_USER) {
         eventName = EVENT_PAYMENT_ERROR;
-        _eventEmitter.emit(eventName, null, decodedResponse['response']);
+        _eventEmitter.emit(eventName, null, 'Payment Cancelled by user.');
+      } else if (data != null) {
+        try {
+          final decryptedData = HesabeCrypt()
+              .decrypt(data, secretKey, ivKey)
+              .replaceAll(_trimmingRegExp, '')
+              .trim();
+
+          final cleanedResponseData = decryptedData.replaceAll(RegExp(r'[\x00-\x1F\x7F]+'), '');
+          print('Cleaned response data: $cleanedResponseData');
+
+          final decodedResponse = json.decode(utf8.decode(cleanedResponseData.codeUnits));
+
+          if (decodedResponse['status']) {
+            eventName = EVENT_PAYMENT_SUCCESS;
+            _eventEmitter.emit(eventName, null, decodedResponse['response']);
+          } else {
+            eventName = EVENT_PAYMENT_ERROR;
+            _eventEmitter.emit(eventName, null, decodedResponse['response']);
+          }
+        } catch (e) {
+          print('Error processing payment response: $e');
+          _eventEmitter.emit(EVENT_PAYMENT_ERROR, null, 'Error processing payment response: $e');
+        }
       }
+    } catch (e) {
+      print('Error in processResponse: $e');
+      _eventEmitter.emit(EVENT_PAYMENT_ERROR, null, 'Error processing checkout request: $e');
     }
   }
 

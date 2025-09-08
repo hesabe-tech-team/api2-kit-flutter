@@ -38,7 +38,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   !isError
                       ? 'Success! Transaction successful.'
                       : ' Error! Transaction failed. ',
-                  style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: isError ? Colors.red : Colors.green,
                       ),
                 ),

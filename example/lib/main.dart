@@ -132,7 +132,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    print(_getPaymentRequestObject());
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -243,12 +242,16 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: TextButton(
                 onPressed: () {
+                  final paymentRequest = _getPaymentRequestObject();
+                  print('=== BUTTON CLICKED: Open Checkout ===');
+                  print('Payment Request: $paymentRequest');
+                  
                   setState(() {
                     showLoader = true;
                   });
                   hesabe.openCheckout(
                     context,
-                    paymentRequestObject: _getPaymentRequestObject(),
+                    paymentRequestObject: paymentRequest,
                   );
                 },
                 child: Text('Open Checkout'),
